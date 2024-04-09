@@ -1,9 +1,8 @@
 <script>
 const GITHUB_ENDPOINT = "https://api.github.com/repos/";
-const API_PATH = "/core/commits?per_page=30&sha=main";
+const API_PATH = "/core/commits?per_page=10&sha=main";
 
 export default {
-  
   data: () => ({
     repo: "vuejs",
     commits: null,
@@ -15,7 +14,6 @@ export default {
   },
   watch: {
     repo: "fetchRepoInfo",
-    
   },
   methods: {
     fetchRepoInfo() {
@@ -24,9 +22,10 @@ export default {
       this.error = null;
       fetch(GITHUB_ENDPOINT + this.repo + API_PATH)
         .then((res) => {
-          if(res.status !== 200) {
-              throw ("An error occured!")
+          if (res.status !== 200) {
+            throw "An error occured!";
           }
+          return res.json();
         })
         .then((result) => {
           this.commits = result;
@@ -39,7 +38,7 @@ export default {
         });
     },
     computed: {
-  console: () => console,
+      console: () => console,
     },
     truncate(v) {
       if (!v) return;
@@ -57,6 +56,9 @@ export default {
 </script>
 
 <template>
+  <div>
+    <p class="title">Git Repo Searcher</p>
+  </div>
   <input :value="repo" @input="updateRepoItem" />
   <div class="commits">
     <div class="commits-container">
@@ -87,7 +89,7 @@ export default {
           </li>
         </ul>
       </div>
-      <div v-else>{{ error }}</div>
+      <div class="error" v-else>{{ error }}</div>
     </div>
   </div>
 </template>
@@ -95,13 +97,14 @@ export default {
 <style scoped>
 .commits {
   width: 100%;
+  flex-wrap: nowrap;
+  justify-content: center;
+  display: flex;
   background-color: "white";
   .commits-container {
-    flex-direction: row;
-    flex: auto;
-    justify-content: center;
     max-width: 60%;
   }
+
   .commit-container {
     background-color: #f69a84;
     border-radius: 5px;
@@ -109,5 +112,12 @@ export default {
     margin-top: 10px;
     margin-bottom: 10px;
   }
+  .error {
+    color: red;
+    font: bold;
+  }
+}
+.title {
+  font-size: 2.5rem;
 }
 </style>
