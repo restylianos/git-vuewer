@@ -1,15 +1,24 @@
 <script>
 const GITHUB_ENDPOINT = "https://api.github.com/repos/";
 const API_PATH = "/core/commits?per_page=10&sha=main";
+import { debounce } from "../utils/helpers";
+import TopContributor from "./TopContributor.vue";
 
 export default {
+  components: {
+    TopContributor,
+  },
   data: () => ({
     repo: "vuejs",
     commits: null,
     error: null,
     loading: false,
+    contributionMap: new Map(),
   }),
   mounted() {
+    this.updateRepoItem = debounce((e) => {
+      this.repo = e.target.value;
+    }, 600);
     this.fetchRepoInfo();
   },
   watch: {
@@ -29,6 +38,16 @@ export default {
         })
         .then((result) => {
           this.commits = result;
+          result.map((x) => {
+            if (!this.contributionMap.get(x.author.login)) {
+              this.contributionMap.set(x.author.login, 1);
+            } else {
+              this.contributionMap.set(
+                x.author.login,
+                this.contributionMap.get(x.author.login) + 1,
+              );
+            }
+          });
           this.loading = false;
         })
         .catch((err) => {
@@ -38,7 +57,7 @@ export default {
         });
     },
     computed: {
-      console: () => console,
+      console: () => console.log(this),
     },
     truncate(v) {
       if (!v) return;
@@ -56,14 +75,15 @@ export default {
 </script>
 
 <template>
-  <div>
-    <p class="title">Git Repo Searcher</p>
+  <div class="centered">
+    <p class="title">Github Repo Searcher</p>
+    <input :value="repo" @input="updateRepoItem" />
   </div>
-  <input :value="repo" @input="updateRepoItem" />
   <div class="commits">
     <div class="commits-container">
       <div v-if="loading && !error">Loading...</div>
       <div v-else-if="!error && commits">
+        <TopContributor :contributors="contributionMap"/>
         <ul>
           <li
             v-for="{ html_url, sha, author, commit } in commits"
@@ -119,5 +139,12 @@ export default {
 }
 .title {
   font-size: 2.5rem;
+}
+
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 15px;
 }
 </style>
