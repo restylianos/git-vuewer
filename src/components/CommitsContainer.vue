@@ -1,6 +1,6 @@
 <script>
 const GITHUB_ENDPOINT = "https://api.github.com/repos/";
-const API_PATH = "/core/commits?per_page=10&sha=main";
+const API_PATH = "/core/commits?per_page=22&sha=main";
 import { debounce } from "../utils/helpers";
 import TopContributor from "./TopContributor.vue";
 
@@ -10,21 +10,69 @@ export default {
   },
   data: () => ({
     repo: "vuejs",
+    visibleCommits: null,
     commits: null,
     error: null,
     loading: false,
     contributionMap: new Map(),
+    currentPage: 0,
+    pageSize:  10,
   }),
+  computed: {
+    isNextDisabled(){
+      return this.currentPage === (Math.ceil(this.commits.length / this.pageSize)) - 1 ;
+      
+    },
+    isPreviousDisabled(){
+      return this.currentPage === 0;
+    },
+    currentPageInfo(){
+     
+      const isLastPage = this.isNextDisabled;
+      console
+      if (isLastPage ){
+        return `Showing ${ (((this.currentPage) * this.pageSize )) + (this.commits.length % this.pageSize) } out of ${this.commits.length}`
+      }
+      return `Showing ${((this.currentPage+1) * this.pageSize)} out of ${this.commits.length}`
+    }
+  },
+
   mounted() {
     this.updateRepoItem = debounce((e) => {
       this.repo = e.target.value;
     }, 600);
     this.fetchRepoInfo();
   },
+
   watch: {
     repo: "fetchRepoInfo",
+
   },
   methods: {
+    increasePage() {
+      const nextPageStartIndex = (this.currentPage + 1) * this.pageSize;
+      if (nextPageStartIndex < this.commits.length) {
+        this.inNextBlocked = false
+        this.currentPage++;
+        this.visibleCommits =  this.commits.slice(
+          nextPageStartIndex,
+          nextPageStartIndex + this.pageSize,
+        );
+      } 
+    },
+    decreasePage() {
+      const prevPageStartIndex = Math.max(
+        0,
+        (this.currentPage - 1) * this.pageSize,
+      );
+      if (prevPageStartIndex !== this.currentPage * this.pageSize) {
+        this.currentPage--;
+        this.visibleCommits =  this.commits.slice(
+          prevPageStartIndex,
+          prevPageStartIndex + this.pageSize,
+        );
+      }
+    },
     fetchRepoInfo() {
       this.commits = null;
       this.loading = true;
@@ -38,6 +86,7 @@ export default {
         })
         .then((result) => {
           this.commits = result;
+          this.visibleCommits = result.slice(0,this.pageSize)
           result.map((x) => {
             if (!this.contributionMap.get(x.author.login)) {
               this.contributionMap.set(x.author.login, 1);
@@ -56,9 +105,6 @@ export default {
           this.loading = false;
         });
     },
-    computed: {
-      console: () => console.log(this),
-    },
     truncate(v) {
       if (!v) return;
       const newline = v.indexOf("\n");
@@ -70,7 +116,8 @@ export default {
     updateRepoItem(e) {
       this.repo = e.target.value;
     },
-  },
+  }
+  
 };
 </script>
 
@@ -82,11 +129,11 @@ export default {
   <div class="commits">
     <div class="commits-container">
       <div v-if="loading && !error">Loading...</div>
-      <div v-else-if="!error && commits">
-        <TopContributor :contributors="contributionMap"/>
+      <div v-else-if="!error && visibleCommits">
+        <TopContributor :contributors="contributionMap" />
         <ul>
           <li
-            v-for="{ html_url, sha, author, commit } in commits"
+            v-for="{ html_url, sha, author, commit } in visibleCommits"
             class="commit-container"
           >
             <a :href="html_url" target="_blank" class="commit">
@@ -108,10 +155,16 @@ export default {
             </span>
           </li>
         </ul>
+        <div class="pagination-container">
+          <div>{{ currentPageInfo }}</div>
+    <button v-if="!isPreviousDisabled" @click="decreasePage" class="pagination-button-previous">Previous</button>
+    <button v-if="!isNextDisabled" @click="increasePage" class="pagination-button-next">Next</button>
+  </div>
       </div>
       <div class="error" v-else>{{ error }}</div>
     </div>
   </div>
+  
 </template>
 
 <style scoped>
@@ -147,4 +200,63 @@ export default {
   align-items: center;
   row-gap: 15px;
 }
+
+.pagination-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 15px;
+  justify-content: center;
+}
+.pagination-button-next {
+  appearance: none;
+  border: 1px solid rgba(27, 31, 35, .15);
+  border-radius: 6px;
+  box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 6px 16px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  background-color: #2ea44f;
+  white-space: nowrap;
+}
+.pagination-button-previous {
+  appearance: none;
+  border: 1px solid rgba(27, 31, 35, .15);
+  border-radius: 6px;
+  box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 6px 16px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  background-color: #ff004f;
+  white-space: nowrap;
+}
+
+
+
 </style>
