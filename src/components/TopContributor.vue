@@ -24,7 +24,7 @@ export default {
       for (let [key, value] of this.contributors) {
         if (value > maxValue) {
           maxKey = key;
-          maxValue = value;
+          maxValue = value
         }
       }
 

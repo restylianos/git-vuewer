@@ -1,6 +1,6 @@
 <script>
 const GITHUB_ENDPOINT = "https://api.github.com/repos/";
-const API_PATH = "/core/commits?per_page=22&sha=main";
+const API_PATH = "/core/commits?per_page=100&sha=main";
 import { debounce } from "../utils/helpers";
 import TopContributor from "./TopContributor.vue";
 
@@ -16,25 +16,30 @@ export default {
     loading: false,
     contributionMap: new Map(),
     currentPage: 0,
-    pageSize:  10,
+    pageSize: 10,
   }),
   computed: {
-    isNextDisabled(){
-      return this.currentPage === (Math.ceil(this.commits.length / this.pageSize)) - 1 ;
-      
+    isNextDisabled() {
+      return (
+        this.currentPage === Math.ceil(this.commits.length / this.pageSize) - 1
+      );
     },
-    isPreviousDisabled(){
+    isPreviousDisabled() {
       return this.currentPage === 0;
     },
-    currentPageInfo(){
-     
+    currentPageInfo() {
       const isLastPage = this.isNextDisabled;
-      console
-      if (isLastPage ){
-        return `Showing ${ (((this.currentPage) * this.pageSize )) + (this.commits.length % this.pageSize) } out of ${this.commits.length}`
+      console;
+      if (isLastPage) {
+        return `Showing ${
+          this.currentPage * this.pageSize +
+          (this.commits.length % this.pageSize)
+        } out of ${this.commits.length}`;
       }
-      return `Showing ${((this.currentPage+1) * this.pageSize)} out of ${this.commits.length}`
-    }
+      return `Showing ${(this.currentPage + 1) * this.pageSize} out of ${
+        this.commits.length
+      }`;
+    },
   },
 
   mounted() {
@@ -46,30 +51,29 @@ export default {
 
   watch: {
     repo: "fetchRepoInfo",
-
   },
   methods: {
     increasePage() {
       const nextPageStartIndex = (this.currentPage + 1) * this.pageSize;
       if (nextPageStartIndex < this.commits.length) {
-        this.inNextBlocked = false
+        this.inNextBlocked = false;
         this.currentPage++;
-        this.visibleCommits =  this.commits.slice(
+        this.visibleCommits = this.commits.slice(
           nextPageStartIndex,
-          nextPageStartIndex + this.pageSize,
+          nextPageStartIndex + this.pageSize
         );
-      } 
+      }
     },
     decreasePage() {
       const prevPageStartIndex = Math.max(
         0,
-        (this.currentPage - 1) * this.pageSize,
+        (this.currentPage - 1) * this.pageSize
       );
       if (prevPageStartIndex !== this.currentPage * this.pageSize) {
         this.currentPage--;
-        this.visibleCommits =  this.commits.slice(
+        this.visibleCommits = this.commits.slice(
           prevPageStartIndex,
-          prevPageStartIndex + this.pageSize,
+          prevPageStartIndex + this.pageSize
         );
       }
     },
@@ -86,14 +90,14 @@ export default {
         })
         .then((result) => {
           this.commits = result;
-          this.visibleCommits = result.slice(0,this.pageSize)
+          this.visibleCommits = result.slice(0, this.pageSize);
           result.map((x) => {
             if (!this.contributionMap.get(x.author.login)) {
               this.contributionMap.set(x.author.login, 1);
             } else {
               this.contributionMap.set(
                 x.author.login,
-                this.contributionMap.get(x.author.login) + 1,
+                this.contributionMap.get(x.author.login) + 1
               );
             }
           });
@@ -116,8 +120,7 @@ export default {
     updateRepoItem(e) {
       this.repo = e.target.value;
     },
-  }
-  
+  },
 };
 </script>
 
@@ -157,14 +160,25 @@ export default {
         </ul>
         <div class="pagination-container">
           <div>{{ currentPageInfo }}</div>
-    <button v-if="!isPreviousDisabled" @click="decreasePage" class="pagination-button-previous">Previous</button>
-    <button v-if="!isNextDisabled" @click="increasePage" class="pagination-button-next">Next</button>
-  </div>
+          <button
+            v-if="!isPreviousDisabled"
+            @click="decreasePage"
+            class="pagination-button-previous"
+          >
+            Previous
+          </button>
+          <button
+            v-if="!isNextDisabled"
+            @click="increasePage"
+            class="pagination-button-next"
+          >
+            Next
+          </button>
+        </div>
       </div>
       <div class="error" v-else>{{ error }}</div>
     </div>
   </div>
-  
 </template>
 
 <style scoped>
@@ -174,6 +188,7 @@ export default {
   justify-content: center;
   display: flex;
   background-color: "white";
+
   .commits-container {
     max-width: 60%;
   }
@@ -185,11 +200,13 @@ export default {
     margin-top: 10px;
     margin-bottom: 10px;
   }
+
   .error {
     color: red;
     font: bold;
   }
 }
+
 .title {
   font-size: 2.5rem;
 }
@@ -208,16 +225,18 @@ export default {
   column-gap: 15px;
   justify-content: center;
 }
+
 .pagination-button-next {
   appearance: none;
-  border: 1px solid rgba(27, 31, 35, .15);
+  border: 1px solid rgba(27, 31, 35, 0.15);
   border-radius: 6px;
-  box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+  box-shadow: rgba(27, 31, 35, 0.1) 0 1px 0;
   box-sizing: border-box;
   color: #fff;
   cursor: pointer;
   display: inline-block;
-  font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;
@@ -232,16 +251,18 @@ export default {
   background-color: #2ea44f;
   white-space: nowrap;
 }
+
 .pagination-button-previous {
   appearance: none;
-  border: 1px solid rgba(27, 31, 35, .15);
+  border: 1px solid rgba(27, 31, 35, 0.15);
   border-radius: 6px;
-  box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+  box-shadow: rgba(27, 31, 35, 0.1) 0 1px 0;
   box-sizing: border-box;
   color: #fff;
   cursor: pointer;
   display: inline-block;
-  font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;
@@ -256,7 +277,4 @@ export default {
   background-color: #ff004f;
   white-space: nowrap;
 }
-
-
-
 </style>

@@ -8,12 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:watch": "vitest --watch",
-  "dependencies": {
-    "vitest": "^1.4.0",
-    "vue": "^3.4.21"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.0"
+    "dependencies": {
+      "vitest": "^1.4.0",
+      "vue": "^3.4.21"
+    },
+    "devDependencies": {
+      "@vitejs/plugin-vue": "^5.0.4",
+      "vite": "^5.2.0"
+    }
   }
 }
